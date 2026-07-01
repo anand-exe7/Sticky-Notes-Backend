@@ -47,13 +47,13 @@ func (ds *MyStorerDb) GetNoteById(ctx context.Context,id string) (*model.StickyN
 	err := ds.db.Database("go-backend").Collection("notes").FindOne(ctx,filter).Decode(&note)
 
 	if err != nil {
-		return nil,fmt.Errorf("Error getting teh particular note %w",&err)
+		return nil,fmt.Errorf("Error getting teh particular note %w",err)
 	}
 
 	return &note,nil
 }
 
-func (ds *MyStorerDb) GettALLNotes(ctx context.Context, m model.StickyNote) ([]*model.StickyNote,error){
+func (ds *MyStorerDb) GettALLNotes(ctx context.Context) ([]*model.StickyNote,error){
 
 	var notes []*model.StickyNote
 

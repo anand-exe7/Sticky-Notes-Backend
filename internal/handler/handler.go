@@ -182,3 +182,17 @@ func (h *Handler) DeleteNote(w http.ResponseWriter,r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 } 
+
+func (h *Handler) TogglePinNote(w http.ResponseWriter, r *http.Request) {
+
+	id := chi.URLParam(r, "id")
+
+	err := h.storer.TogglePin(r.Context(), id)
+
+	if err != nil {
+		http.Error(w, "Error toggling pin", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

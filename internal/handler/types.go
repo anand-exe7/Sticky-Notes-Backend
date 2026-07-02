@@ -23,6 +23,8 @@ type NoteStorer interface {
 	PermanentDelete(ctx context.Context, id string) error
 	
 	DeleteNote(ctx context.Context, id string) error
+
+	TogglePin(ctx context.Context, id string) error
 }
 
 type NoteRequest struct {

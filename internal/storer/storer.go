@@ -175,3 +175,36 @@ func (ds *MyStorerDb) PermanentDelete(ctx context.Context , id string) error {
 	return nil
 
 }
+
+func (ds *MyStorerDb) TogglePin(ctx context.Context,id string) (error) {
+
+
+	var note model.StickyNote
+	
+	filter := bson.M{"_id" : id}
+
+	err := ds.db.Database("go-backend").Collection("notes").FindOne(ctx,filter).Decode(&note)
+
+	if err != nil {
+		return fmt.Errorf("error finding note to toggle pin: %w", err)
+	}
+
+	newPinnedValue := !note.Pinned
+
+	
+	update := bson.M{
+		"$set" :
+		bson.M{ 
+			"pinned" : newPinnedValue,
+		},
+	}
+
+   _,err = ds.db.Database("go-backend").Collection("notes").UpdateOne(ctx,filter,&update)
+
+   if err != nil {
+	return err
+   }
+
+   return nil
+
+}

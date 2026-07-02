@@ -15,6 +15,12 @@ type NoteStorer interface {
 	GettALLNotes(ctx context.Context) ([]*model.StickyNote, error)
 	
 	EditNote(ctx context.Context, id string, data model.StickyNote) (model.StickyNote, error)
+
+	GetTrashNotes(ctx context.Context) ([]*model.StickyNote, error)
+
+	RestoreNote(ctx context.Context, id string) error
+	
+	PermanentDelete(ctx context.Context, id string) error
 	
 	DeleteNote(ctx context.Context, id string) error
 }

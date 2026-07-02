@@ -20,6 +20,7 @@ type StickyNote struct {
 	Pinned    bool      `json:"pinned" bson:"pinned"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
+	Status     string 	`json:"status"  bson:"status"`
 }
 
 type NoteFormData struct {

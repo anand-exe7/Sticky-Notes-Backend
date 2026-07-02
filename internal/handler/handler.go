@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"sticky-notes-go-backend/internal/model"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -35,8 +36,11 @@ func (h *Handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	note := model.StickyNote{
 		Title:   n.Title,
 		Content: n.Content,
-		 Color:   n.Color,
+		Color:   n.Color,
 		Pinned:  n.Pinned,
+		Status:  "active",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	}
 
 	res,err := h.storer.CreateNotes(r.Context(),note)

@@ -58,7 +58,7 @@ func (ds *MyStorerDb) GettALLNotes(ctx context.Context) ([]*model.StickyNote,err
 
 	var notes []*model.StickyNote
 
-	filter := bson.M{"status" : "active"}
+	filter := bson.M{"status": bson.M{"$ne": "trash"}}
 
 	get,err := ds.db.Database("go-backend").Collection("notes").Find(ctx,filter)
 

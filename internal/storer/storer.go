@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sticky-notes-go-backend/internal/model"
 	"time"
+
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
 	"go.mongodb.org/mongo-driver/v2/mongo/options"
-	
 )
 
 type MyStorerDb struct {
@@ -58,7 +58,7 @@ func (ds *MyStorerDb) GettALLNotes(ctx context.Context) ([]*model.StickyNote,err
 
 	var notes []*model.StickyNote
 
-	filter := bson.M{}
+	filter := bson.M{"status" : "active"}
 
 	get,err := ds.db.Database("go-backend").Collection("notes").Find(ctx,filter)
 
@@ -92,7 +92,7 @@ func (ds *MyStorerDb) EditNote(ctx context.Context, id string, data model.Sticky
 	var updatedNote model.StickyNote
 
     filter := bson.M{"_id" : id}
-	
+
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	err := ds.db.Database("go-backend").Collection("notes").FindOneAndUpdate(ctx,filter,&update, opts).Decode(&updatedNote)
@@ -104,8 +104,65 @@ func (ds *MyStorerDb) EditNote(ctx context.Context, id string, data model.Sticky
 	return updatedNote,nil
 
 }
- 
+
+func (ds *MyStorerDb) GetTrashNotes(ctx context.Context) ([]*model.StickyNote,error) {
+
+	var n []*model.StickyNote
+
+	filter := bson.M{"status":"trash"}
+
+	get,err := ds.db.Database("go-backend").Collection("notes").Find(ctx,filter)
+
+	if err != nil {
+		return nil,err
+	}
+
+	err = get.All(ctx,&n)
+
+	return n,nil
+}
+
+
+func (ds *MyStorerDb) RestoreNote(ctx context.Context, id string) (error) {
+
+
+	filter := bson.M{"_id" : id}
+
+	update := bson.M{
+	"$set": bson.M{
+		"status" : "active" }}
+
+
+	_,err := ds.db.Database("go-backend").Collection("notes").UpdateOne(ctx,filter,update)
+
+	if err != nil {
+		return  fmt.Errorf("Error Restoring note %w",err)
+	}
+
+	return nil
+
+}
+
+
 func (ds *MyStorerDb) DeleteNote(ctx context.Context, id string) error {
+
+	filter := bson.M{"_id" : id}
+
+	update := bson.M{"$set":
+		bson.M{"status": "trash",
+	}}
+
+	_,err := ds.db.Database("go-backend").Collection("notes").UpdateOne(ctx,filter,update)
+
+	if err != nil {
+		return fmt.Errorf("Error Delteing the note %w",err)
+	}
+
+	return nil
+
+}
+
+func (ds *MyStorerDb) PermanentDelete(ctx context.Context , id string) error {
 
 	filter := bson.M{"_id" : id}
 

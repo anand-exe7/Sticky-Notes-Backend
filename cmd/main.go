@@ -2,9 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"log"
+	"sticky-notes-go-backend/internal/db"
+	"sticky-notes-go-backend/internal/handler"
+	"sticky-notes-go-backend/internal/routes"
+	"sticky-notes-go-backend/internal/storer"
+
 	"github.com/joho/godotenv"
 )
 
@@ -17,11 +22,27 @@ func main() {
 	}
 
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = ":8080"
+	}
+
+	uri := os.Getenv("MONGO_URI")
+
+	if uri == "" {
+		uri = "mongodb://localhost:27017"
+	}
+
+	conn,err := db.NewDatabase(uri)
+	if err != nil {
+		log.Fatal("error connceting db")
+	}
 	
-	http.HandleFunc("/",func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w,"We gucci")
-	})
+	storer := storer.NewDbStorer(conn.Client)
+	
+	handler := handler.NewHandler(storer)
+
+	router := routes.NewRouter(handler)
 
 	fmt.Println("Server Runninh on ",port)
-	http.ListenAndServe(port,nil)
+	http.ListenAndServe(port,router)
 }

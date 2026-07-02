@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/v2/bson"
 	"go.mongodb.org/mongo-driver/v2/mongo"
+	"go.mongodb.org/mongo-driver/v2/mongo/options"
 	
 )
 
@@ -91,8 +92,10 @@ func (ds *MyStorerDb) EditNote(ctx context.Context, id string, data model.Sticky
 	var updatedNote model.StickyNote
 
     filter := bson.M{"_id" : id}
+	
+	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	err := ds.db.Database("go-backend").Collection("notes").FindOneAndUpdate(ctx,filter,&update).Decode(&updatedNote)
+	err := ds.db.Database("go-backend").Collection("notes").FindOneAndUpdate(ctx,filter,&update, opts).Decode(&updatedNote)
 
 	if err != nil {
 		return model.StickyNote{},fmt.Errorf("Error editing note %w",err)

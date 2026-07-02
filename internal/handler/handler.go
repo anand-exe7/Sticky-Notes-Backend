@@ -126,6 +126,47 @@ func (h *Handler) EditNote(w http.ResponseWriter,r *http.Request) {
 
 } 
 
+func (h *Handler) GetTrashNotes(w http.ResponseWriter, r *http.Request) {
+
+	notes, err := h.storer.GetTrashNotes(r.Context())
+
+	if err != nil {
+		http.Error(w, "Error getting trash notes", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(notes)
+}
+
+func (h *Handler) RestoreNote(w http.ResponseWriter, r *http.Request) {
+
+	id := chi.URLParam(r, "id")
+
+	err := h.storer.RestoreNote(r.Context(), id)
+
+	if err != nil {
+		http.Error(w, "Error restoring note", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) PermanentDeleteNote(w http.ResponseWriter, r *http.Request) {
+
+	id := chi.URLParam(r, "id")
+
+	err := h.storer.PermanentDelete(r.Context(), id)
+
+	if err != nil {
+		http.Error(w, "Error permanently deleting note", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
 
 func (h *Handler) DeleteNote(w http.ResponseWriter,r *http.Request) {
 

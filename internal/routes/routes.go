@@ -17,9 +17,14 @@ func NewRouter(h *handler.Handler) *chi.Mux {
 		
 		r.Post("/", h.CreateNote)
 		r.Get("/", h.GetAllNotes)
+		r.Get("/trash", h.GetTrashNotes)
+
 		r.Get("/{id}", h.GetNoteByID)
 		r.Put("/{id}", h.EditNote)
 		r.Delete("/{id}", h.DeleteNote)
+
+		r.Post("/{id}/restore", h.RestoreNote)
+		r.Delete("/{id}/permanent", h.PermanentDeleteNote)
 	})
 
 	return r

@@ -28,18 +28,27 @@ type NoteStorer interface {
 }
 
 type NoteRequest struct {
-	Title   string          `json:"title"`
-	Content string          `json:"content"`
-	Color   model.NoteColor `json:"color"`
-	Pinned  bool            `json:"pinned"`
+	Title          string                `json:"title"`
+	Content         string                `json:"content"`
+	Color          model.NoteColor       `json:"color"`
+	Pinned         bool                  `json:"pinned"`
+	Category        string                `json:"category"`
+	IsLocked        bool                  `json:"isLocked"`
+	Password       string                `json:"password"`
+	IsChecklist    bool                  `json:"isChecklist"`
+	ChecklistItems []model.ChecklistItem `json:"checklistItems"`
 }
 
 type NoteResponse struct {
-	ID        string          `json:"id"`
-	Title     string          `json:"title"`
-	Content   string          `json:"content"`
-	Color     model.NoteColor `json:"color"`
-	Pinned    bool            `json:"pinned"`
-	CreatedAt time.Time       `json:"createdAt"`
-	UpdatedAt time.Time       `json:"updatedAt"`
+	ID             string                `json:"id"`
+	Title           string                `json:"title"`
+	Content         string                `json:"content"`
+	Color          model.NoteColor       `json:"color"`
+	Pinned         bool                  `json:"pinned"`
+	Category       string                `json:"category"`
+	IsLocked        bool                  `json:"isLocked"`
+	IsChecklist    bool                  `json:"isChecklist"`
+	ChecklistItems []model.ChecklistItem `json:"checklistItems"`
+	CreatedAt      time.Time             `json:"createdAt"`
+	UpdatedAt       time.Time             `json:"updatedAt"`
 }

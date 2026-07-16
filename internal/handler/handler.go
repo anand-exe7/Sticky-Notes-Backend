@@ -34,30 +34,38 @@ func (h *Handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 	}
 
 	note := model.StickyNote{
-		Title:   n.Title,
-		Content: n.Content,
-		Color:   n.Color,
-		Pinned:  n.Pinned,
-		Status:  "active",
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+		Title:          n.Title,
+		Content:        n.Content,
+		Color:          n.Color,
+		Pinned:          n.Pinned,
+		Category:       n.Category,
+		IsLocked:       n.IsLocked,
+		IsChecklist:     n.IsChecklist,
+		ChecklistItems: n.ChecklistItems,
+		Status:         "active",
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
-	res,err := h.storer.CreateNotes(r.Context(),note)
+	res, err := h.storer.CreateNotes(r.Context(), note)
 	
 	if err != nil {
-		http.Error(w,"Error Creating note",http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 
 	response := NoteResponse{
-		ID:        res.ID,
-		Title:     res.Title,
-		Content:   res.Content,
-		 Color:     res.Color,
-		 Pinned:    res.Pinned,
-		CreatedAt: res.CreatedAt,
-		UpdatedAt: res.UpdatedAt,
+		ID:             res.ID,
+		Title:           res.Title,
+		Content:        res.Content,
+		Color:          res.Color,
+		Pinned:          res.Pinned,
+		Category:       res.Category,
+		IsLocked:        res.IsLocked,
+		IsChecklist:    res.IsChecklist,
+		ChecklistItems:  res.ChecklistItems,
+		CreatedAt:      res.CreatedAt,
+		UpdatedAt:       res.UpdatedAt,
 	}
 
 	w.Header().Set("Content-Type","application/json")
@@ -111,16 +119,20 @@ func (h *Handler) EditNote(w http.ResponseWriter,r *http.Request) {
 	}
 
 	note := model.StickyNote{
-		Title:   n.Title,
-		Content: n.Content,
-		Color:   n.Color,
-		Pinned:  n.Pinned,
+		Title:          n.Title,
+		Content:        n.Content,
+		Color:           n.Color,
+		Pinned:         n.Pinned,
+		Category:        n.Category,
+		IsLocked:        n.IsLocked,
+		IsChecklist:     n.IsChecklist,
+		ChecklistItems:  n.ChecklistItems,
 	}
 
-	updated,err := h.storer.EditNote(r.Context(),id,note)
+	updated, err := h.storer.EditNote(r.Context(), id, note)
 
 	if err != nil {
-		http.Error(w,"Error editing note",http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusConflict)
 		return
 	}
 

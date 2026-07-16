@@ -29,7 +29,20 @@ func (ds *MyStorerDb) CreateNotes(ctx context.Context, m model.StickyNote) (*mod
 		m.ID = uuid.NewString()
 	}
 
-	_, err := ds.db.Database("go-backend").Collection("notes").InsertOne(ctx, m)
+	filter := bson.M{"title": m.Title}
+
+	err := ds.db.Database("go-backend").Collection("notes").FindOne(ctx,filter).Err()
+
+	if err == nil {
+
+		return nil,fmt.Errorf("a note with the same title present please choose a new tiitle name")
+
+	}else if err != mongo.ErrNoDocuments {
+
+		return nil, fmt.Errorf("database error while checking title: %w", err)
+	}
+
+	_, err = ds.db.Database("go-backend").Collection("notes").InsertOne(ctx, m)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error in creating notes %w", err)
@@ -78,24 +91,42 @@ func (ds *MyStorerDb) GettALLNotes(ctx context.Context) ([]*model.StickyNote,err
 
 func (ds *MyStorerDb) EditNote(ctx context.Context, id string, data model.StickyNote) (model.StickyNote,error) {
 
+	duplicateFilter := bson.M{
+		"title": data.Title,
+		"_id":   bson.M{"$ne": id},
+	}
+
+	err := ds.db.Database("go-backend").Collection("notes").FindOne(ctx, duplicateFilter).Err()
+
+	if err == nil {
+
+		return model.StickyNote{}, fmt.Errorf("a note with the same title already exists")
+
+	} else if err != mongo.ErrNoDocuments {
+
+		return model.StickyNote{}, fmt.Errorf("database error while checking title: %w", err)
+	}
 
 	update := bson.M{
-	"$set": bson.M{
-		"title":     data.Title,
-		"content":   data.Content,
-		"color":     data.Color,
-		"pinned":    data.Pinned,
-		"updatedAt": time.Now(),
-	},
-}
+		"$set": bson.M{
+			"title":          data.Title,
+			"content":         data.Content,
+			"color":          data.Color,
+			"pinned":         data.Pinned,
+			"category":        data.Category,
+			"isLocked":       data.IsLocked,
+			"isChecklist":     data.IsChecklist,
+			"checklistItems": data.ChecklistItems,
+			"updatedAt":      time.Now(),
+		},
+	}
      
 	var updatedNote model.StickyNote
 
-    filter := bson.M{"_id" : id}
-
+	updateFilter := bson.M{"_id": id}
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
-	err := ds.db.Database("go-backend").Collection("notes").FindOneAndUpdate(ctx,filter,&update, opts).Decode(&updatedNote)
+	err = ds.db.Database("go-backend").Collection("notes").FindOneAndUpdate(ctx, updateFilter, &update, opts).Decode(&updatedNote)
 
 	if err != nil {
 		return model.StickyNote{},fmt.Errorf("Error editing note %w",err)

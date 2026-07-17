@@ -101,6 +101,11 @@ func (h *Handler) GetNoteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if note.IsLocked {
+		note.Content = ""
+		note.ChecklistItems = nil
+	}
+
 	w.Header().Set("Content-Type","application/json")
 	w.WriteHeader(http.StatusAccepted)
 	json.NewEncoder(w).Encode(&note)

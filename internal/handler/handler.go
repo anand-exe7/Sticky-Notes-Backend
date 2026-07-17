@@ -3,11 +3,13 @@ package handler
 import (
 	"context"
 	"encoding/json"
+
 	"net/http"
 	"sticky-notes-go-backend/internal/model"
 	"time"
 
 	"github.com/go-chi/chi/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Handler struct {
@@ -25,12 +27,25 @@ func NewHandler(storer NoteStorer) *Handler {
 func (h *Handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 
 	var n NoteRequest
-
+	
 	err := json.NewDecoder(r.Body).Decode(&n)
 
 	if err != nil {
-		http.Error(w,"Error Decoind teh incomning request",http.StatusBadRequest)
+		http.Error(w,"Error Decoding the incoming request",http.StatusBadRequest)
 		return
+	}
+
+	if n.IsLocked && n.Password != "" {
+
+		hashed,err := bcrypt.GenerateFromPassword([]byte(n.Password),bcrypt.DefaultCost)
+
+		if err != nil {
+			http.Error(w,"Failed to hash pass",http.StatusBadRequest)
+			return
+		}
+
+		n.Password = string(hashed)
+
 	}
 
 	note := model.StickyNote{
@@ -40,7 +55,8 @@ func (h *Handler) CreateNote(w http.ResponseWriter, r *http.Request) {
 		Pinned:          n.Pinned,
 		Category:       n.Category,
 		IsLocked:       n.IsLocked,
-		IsChecklist:     n.IsChecklist,
+		Password:       n.Password,
+		IsChecklist:    n.IsChecklist,
 		ChecklistItems: n.ChecklistItems,
 		Status:         "active",
 		CreatedAt:      time.Now(),
@@ -99,6 +115,13 @@ func (h *Handler) GetAllNotes(w http.ResponseWriter,r *http.Request) {
 		return
 	}
 
+	for _,note := range notes {
+		if note.IsLocked {
+			note.Content = ""
+			note.ChecklistItems = nil
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(notes)
@@ -118,6 +141,15 @@ func (h *Handler) EditNote(w http.ResponseWriter,r *http.Request) {
 		return
 	}
 
+	if n.IsLocked && n.Password != "" {
+		hashed, err := bcrypt.GenerateFromPassword([]byte(n.Password), bcrypt.DefaultCost)
+		if err != nil {
+			http.Error(w, "Failed to hash pass", http.StatusBadRequest)
+			return
+		}
+		n.Password = string(hashed)
+	}
+
 	note := model.StickyNote{
 		Title:          n.Title,
 		Content:        n.Content,
@@ -125,6 +157,7 @@ func (h *Handler) EditNote(w http.ResponseWriter,r *http.Request) {
 		Pinned:         n.Pinned,
 		Category:        n.Category,
 		IsLocked:        n.IsLocked,
+		Password:        n.Password,
 		IsChecklist:     n.IsChecklist,
 		ChecklistItems:  n.ChecklistItems,
 	}
@@ -141,6 +174,36 @@ func (h *Handler) EditNote(w http.ResponseWriter,r *http.Request) {
 	json.NewEncoder(w).Encode(&updated)
 
 } 
+
+func (h *Handler) UnlockNote(w http.ResponseWriter,r *http.Request) {
+	
+	id := chi.URLParam(r , "id")
+
+	var req struct {
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	note,err := h.storer.GetNoteById(r.Context(),id)
+
+	if err != nil {
+		http.Error(w,"Error getting your note",http.StatusNotFound)
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(note.Password),[]byte(req.Password)) 
+	if err != nil {
+		http.Error(w,"wrong pass entered",http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type","application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(&note)
+}
 
 func (h *Handler) GetTrashNotes(w http.ResponseWriter, r *http.Request) {
 

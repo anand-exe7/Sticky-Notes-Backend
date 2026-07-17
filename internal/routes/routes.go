@@ -36,6 +36,7 @@ func NewRouter(h *handler.Handler) *chi.Mux {
 		r.Post("/{id}/restore", h.RestoreNote)
 		r.Delete("/{id}/permanent", h.PermanentDeleteNote)
 		r.Patch("/{id}/pin", h.TogglePinNote)
+		r.Post("/{id}/unlock", h.UnlockNote)
 	})
 
 	return r

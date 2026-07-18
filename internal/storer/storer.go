@@ -115,6 +115,7 @@ func (ds *MyStorerDb) EditNote(ctx context.Context, id string, data model.Sticky
 			"pinned":         data.Pinned,
 			"category":        data.Category,
 			"isLocked":       data.IsLocked,
+			"password":       data.Password,
 			"isChecklist":     data.IsChecklist,
 			"checklistItems": data.ChecklistItems,
 			"updatedAt":      time.Now(),
